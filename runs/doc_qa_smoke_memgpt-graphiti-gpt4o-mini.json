@@ -1,0 +1,12 @@
+{
+  "mode": "memgpt",
+  "total": 0,
+  "judged": 0,
+  "correct": 0,
+  "accuracy": 0.0,
+  "exact_match_rate": 0.0,
+  "insufficient_rate": 0.0,
+  "mean_elapsed_seconds": 0.0,
+  "mean_archival_searches": 0.0,
+  "results": []
+}

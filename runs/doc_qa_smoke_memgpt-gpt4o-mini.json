@@ -1,0 +1,201 @@
+{
+  "mode": "memgpt",
+  "total": 10,
+  "judged": 10,
+  "correct": 7,
+  "accuracy": 0.7,
+  "exact_match_rate": 0.4,
+  "insufficient_rate": 0.0,
+  "mean_elapsed_seconds": 4.420424033300151,
+  "mean_archival_searches": 1.0,
+  "results": [
+    {
+      "sample_id": 0,
+      "question": "who got the first nobel prize in physics",
+      "gold_answers": [
+        "Wilhelm Conrad R\u00f6ntgen"
+      ],
+      "predicted_raw": "ANSWER: The first Nobel Prize in Physics was awarded to Wilhelm R\u00f6ntgen in 1901., DOCUMENT: [The first Nobel Prize in Physics was awarded in 1901 to Wilhelm Conrad R\u00f6ntgen, of Germany, who received 150,782 SEK, which is equal to 7,731,004 SEK in December 2007.]",
+      "predicted_answer": "The first Nobel Prize in Physics was awarded to Wilhelm R\u00f6ntgen in 1901.",
+      "predicted_document": "[The first Nobel Prize in Physics was awarded in 1901 to Wilhelm Conrad R\u00f6ntgen, of Germany, who received 150,782 SEK, which is equal to 7,731,004 SEK in December 2007.]",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 6.563415042000997,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 1,
+      "question": "when is the next deadpool movie being released",
+      "gold_answers": [
+        "May 18, 2018"
+      ],
+      "predicted_raw": "ANSWER: The next Deadpool movie, Deadpool 2, is scheduled to be released in the United States on May 18, 2018, and a sequel, Deadpool 3, is in development. DOCUMENT: [Deadpool 2 is scheduled to be released in the United States on May 18, 2018. A sequel, Deadpool 3, is in development.]",
+      "predicted_answer": "The next Deadpool movie, Deadpool 2, is scheduled to be released in the United States on May 18, 2018, and a sequel, Deadpool 3, is in development. DOCUMENT: [Deadpool 2 is scheduled to be released in the United States on May 18, 2018. A sequel, Deadpool 3, is in development.]",
+      "predicted_document": "[Deadpool 2 is scheduled to be released in the United States on May 18, 2018. A sequel, Deadpool 3, is in development.]",
+      "insufficient": false,
+      "exact_match": true,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 2.5023172500004875,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 2,
+      "question": "the south west wind blows across nigeria between",
+      "gold_answers": [
+        "till September"
+      ],
+      "predicted_raw": "ANSWER: The south west wind blows across Nigeria between February and June, primarily impacting the southern part from February and reaching the northern part by June. DOCUMENT: [Geography of Nigeria] south atlantic ocean, locally known as the south western wind, or by its main name, The Tropical Maritime (MT) airmass. These two major wind systems in Nigeria are known as the trade winds. The tropical maritime airmass (MT) is responsible for Nigeria's rainy season. This wind (the tropical maritime airmass) invades the country from February in the southern part of Nigeria while it takes longer for the wind to fully cover the whole of the country, reaching the northern part of Nigeria in June. Its invasion is as a result of the northward retreat, of the tropical continental airmass (CT)",
+      "predicted_answer": "The south west wind blows across Nigeria between February and June, primarily impacting the southern part from February and reaching the northern part by June. DOCUMENT: [Geography of Nigeria] south atlantic ocean, locally known as the south western wind, or by its main name, The Tropical Maritime (MT) airmass. These two major wind systems in Nigeria are known as the trade winds. The tropical maritime airmass (MT) is responsible for Nigeria's rainy season. This wind (the tropical maritime airmass) invades the country from February in the southern part of Nigeria while it takes longer for the wind to fully cover the whole of the country, reaching the northern part of Nigeria in June. Its invasion is as a result of the northward retreat, of the tropical continental airmass (CT)",
+      "predicted_document": "[Geography of Nigeria] south atlantic ocean, locally known as the south western wind, or by its main name, The Tropical Maritime (MT) airmass. These two major wind systems in Nigeria are known as the trade winds. The tropical maritime airmass (MT) is responsible for Nigeria's rainy season. This wind (the tropical maritime airmass) invades the country from February in the southern part of Nigeria while it takes longer for the wind to fully cover the whole of the country, reaching the northern part of Nigeria in June. Its invasion is as a result of the northward retreat, of the tropical continental airmass (CT)",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": false,
+      "judge_raw": "INCORRECT",
+      "elapsed_seconds": 5.491611624998768,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 3,
+      "question": "what does hp mean in war and order",
+      "gold_answers": [
+        "hit points or health points"
+      ],
+      "predicted_raw": "ANSWER: (no specific definition found in the context of \"war and order\"), DOCUMENT: (no matches)",
+      "predicted_answer": "(no specific definition found in the context of \"war and order\")",
+      "predicted_document": "(no matches)",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": false,
+      "judge_raw": "INCORRECT",
+      "elapsed_seconds": 2.3428171660016233,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 4,
+      "question": "who wrote the first declaration of human rights",
+      "gold_answers": [
+        "Cyrus"
+      ],
+      "predicted_raw": "ANSWER: The first declaration of human rights is attributed to John Peters Humphrey, who authored the first draft of the Universal Declaration of Human Rights. DOCUMENT: \"John Peters Humphrey, OC (April 30, 1905 \u2013 March 14, 1995) was a Canadian legal scholar, jurist, and human rights advocate. He is most famous as the author of the first draft of the Universal Declaration of Human Rights.\"",
+      "predicted_answer": "The first declaration of human rights is attributed to John Peters Humphrey, who authored the first draft of the Universal Declaration of Human Rights. DOCUMENT: \"John Peters Humphrey, OC (April 30, 1905 \u2013 March 14, 1995) was a Canadian legal scholar, jurist, and human rights advocate. He is most famous as the author of the first draft of the Universal Declaration of Human Rights.\"",
+      "predicted_document": "\"John Peters Humphrey, OC (April 30, 1905 \u2013 March 14, 1995) was a Canadian legal scholar, jurist, and human rights advocate. He is most famous as the author of the first draft of the Universal Declaration of Human Rights.\"",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": false,
+      "judge_raw": "INCORRECT",
+      "elapsed_seconds": 6.051229124997917,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 5,
+      "question": "who is the owner of reading football club",
+      "gold_answers": [
+        "Xiu Li Dai",
+        "Dai Xiuli",
+        "Dai Yongge",
+        "Yongge Dai"
+      ],
+      "predicted_raw": "ANSWER: The owner of Reading Football Club is Renhe Sports Management Ltd, which is 100% owned by Xiu Li Dai and Yongge Dai. Additionally, 25% is owned by Narin Niruttinanon. \n\nDOCUMENT: [Reading F.C.] Reading Football Club ownership structure: 75% Owned by Renhe Sports Management Ltd, 100% owned by Xiu Li Dai and Yongge Dai. 25% Owned by Narin Niruttinanon.",
+      "predicted_answer": "The owner of Reading Football Club is Renhe Sports Management Ltd, which is 100% owned by Xiu Li Dai and Yongge Dai. Additionally, 25% is owned by Narin Niruttinanon. \n\nDOCUMENT: [Reading F.C.] Reading Football Club ownership structure: 75% Owned by Renhe Sports Management Ltd, 100% owned by Xiu Li Dai and Yongge Dai. 25% Owned by Narin Niruttinanon.",
+      "predicted_document": "[Reading F.C.] Reading Football Club ownership structure: 75% Owned by Renhe Sports Management Ltd, 100% owned by Xiu Li Dai and Yongge Dai. 25% Owned by Narin Niruttinanon.",
+      "insufficient": false,
+      "exact_match": true,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 3.534448500002327,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 6,
+      "question": "when is the last time the philadelphia won the superbowl",
+      "gold_answers": [
+        "Super Bowl LII,",
+        "2017"
+      ],
+      "predicted_raw": "ANSWER: The last time the Philadelphia Eagles won the Super Bowl was during Super Bowl LII, DOCUMENT: [The Philadelphia Eagles are a professional American football franchise based in Philadelphia, Pennsylvania. The Eagles compete in the National Football League (NFL) as a member club of the league's National Football Conference (NFC) East division. They are Super Bowl champions, having won Super Bowl LII, their fourth NFL title, after winning in 1948, 1949, and 1960.]",
+      "predicted_answer": "The last time the Philadelphia Eagles won the Super Bowl was during Super Bowl LII",
+      "predicted_document": "[The Philadelphia Eagles are a professional American football franchise based in Philadelphia, Pennsylvania. The Eagles compete in the National Football League (NFL) as a member club of the league's National Football Conference (NFC) East division. They are Super Bowl champions, having won Super Bowl LII, their fourth NFL title, after winning in 1948, 1949, and 1960.]",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 4.491252457999508,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 7,
+      "question": "how many episodes are there in dragon ball z",
+      "gold_answers": [
+        "291 episodes",
+        "291"
+      ],
+      "predicted_raw": "ANSWER: There are 291 episodes of Dragon Ball Z in Japan, and initially 276 episodes in the United States. DOCUMENT: long-running anime sequel to the Dragon Ball TV series, adapted from the final twenty-six volumes of the Dragon Ball manga written by Akira Toriyama. The manga portion of the series debuted in Weekly Sh\u014dnen Jump in October 4, 1988 and lasted until 1995; the anime adaptation premiered in Japan on Fuji Television on April 26, 1989, taking over its predecessor's time slot, and ran until its end on January 31, 1996, lasting 291 episodes in Japan, and 276 episodes in the United States originally, although all 291 episodes were later broadcast when content from the first 67 episodes was restored.",
+      "predicted_answer": "There are 291 episodes of Dragon Ball Z in Japan, and initially 276 episodes in the United States. DOCUMENT: long-running anime sequel to the Dragon Ball TV series, adapted from the final twenty-six volumes of the Dragon Ball manga written by Akira Toriyama. The manga portion of the series debuted in Weekly Sh\u014dnen Jump in October 4, 1988 and lasted until 1995; the anime adaptation premiered in Japan on Fuji Television on April 26, 1989, taking over its predecessor's time slot, and ran until its end on January 31, 1996, lasting 291 episodes in Japan, and 276 episodes in the United States originally, although all 291 episodes were later broadcast when content from the first 67 episodes was restored.",
+      "predicted_document": "long-running anime sequel to the Dragon Ball TV series, adapted from the final twenty-six volumes of the Dragon Ball manga written by Akira Toriyama. The manga portion of the series debuted in Weekly Sh\u014dnen Jump in October 4, 1988 and lasted until 1995; the anime adaptation premiered in Japan on Fuji Television on April 26, 1989, taking over its predecessor's time slot, and ran until its end on January 31, 1996, lasting 291 episodes in Japan, and 276 episodes in the United States originally, although all 291 episodes were later broadcast when content from the first 67 episodes was restored.",
+      "insufficient": false,
+      "exact_match": true,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 4.80331091699918,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 8,
+      "question": "who designed the garden city of new earswick",
+      "gold_answers": [
+        "planner Raymond Unwin",
+        "architect Barry Parker",
+        "Raymond Unwin"
+      ],
+      "predicted_raw": "ANSWER: The garden city of New Earswick was designed by planner Raymond Unwin and architect Barry Parker. DOCUMENT: [New Earswick] As a result of the report, Joseph Rowntree's conviction that it must be possible to provide better housing for people on low incomes led him to acquire 150 acres of land near the village of Earswick, two and a half miles to the north of the centre of York. The planner Raymond Unwin and the architect Barry Parker were commissioned to produce an overall plan for a new 'garden' village and the detailed designs for its first houses. They also designed the garden cities of Letchworth and Welwyn Garden City.",
+      "predicted_answer": "The garden city of New Earswick was designed by planner Raymond Unwin and architect Barry Parker. DOCUMENT: [New Earswick] As a result of the report, Joseph Rowntree's conviction that it must be possible to provide better housing for people on low incomes led him to acquire 150 acres of land near the village of Earswick, two and a half miles to the north of the centre of York. The planner Raymond Unwin and the architect Barry Parker were commissioned to produce an overall plan for a new 'garden' village and the detailed designs for its first houses. They also designed the garden cities of Letchworth and Welwyn Garden City.",
+      "predicted_document": "[New Earswick] As a result of the report, Joseph Rowntree's conviction that it must be possible to provide better housing for people on low incomes led him to acquire 150 acres of land near the village of Earswick, two and a half miles to the north of the centre of York. The planner Raymond Unwin and the architect Barry Parker were commissioned to produce an overall plan for a new 'garden' village and the detailed designs for its first houses. They also designed the garden cities of Letchworth and Welwyn Garden City.",
+      "insufficient": false,
+      "exact_match": true,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 4.4581193330013775,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    },
+    {
+      "sample_id": 9,
+      "question": "what is the first step in the evolution of the eye",
+      "gold_answers": [
+        "photoreceptor proteins that sense light",
+        "eyespots"
+      ],
+      "predicted_raw": "ANSWER: The first step in the evolution of the eye is thought to be the development of simple light detection, which may have been in the form of a circular patch of photoreceptor cells. DOCUMENT: [Evolution of the eye] \"simple light detection is found in bacteria, single-celled organisms, plants and animals. ... How fast a circular patch of photoreceptor cells evolve into a fully functional vertebrate eye has been estimated based on rates of mutation, relative advantage to the organism, and natural selection.\"",
+      "predicted_answer": "The first step in the evolution of the eye is thought to be the development of simple light detection, which may have been in the form of a circular patch of photoreceptor cells. DOCUMENT: [Evolution of the eye] \"simple light detection is found in bacteria, single-celled organisms, plants and animals. ... How fast a circular patch of photoreceptor cells evolve into a fully functional vertebrate eye has been estimated based on rates of mutation, relative advantage to the organism, and natural selection.\"",
+      "predicted_document": "[Evolution of the eye] \"simple light detection is found in bacteria, single-celled organisms, plants and animals. ... How fast a circular patch of photoreceptor cells evolve into a fully functional vertebrate eye has been estimated based on rates of mutation, relative advantage to the organism, and natural selection.\"",
+      "insufficient": false,
+      "exact_match": false,
+      "judge_correct": true,
+      "judge_raw": "CORRECT",
+      "elapsed_seconds": 3.9657189169993217,
+      "chained_heartbeats": 1,
+      "archival_search_calls": 1,
+      "documents_ingested": 30
+    }
+  ]
+}
