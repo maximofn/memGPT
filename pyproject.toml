@@ -27,6 +27,11 @@ dependencies = [
 embeddings-local = [
     "sentence-transformers>=3.0",
 ]
+# Gráficas de los benchmarks (scripts/plot_nested_kv.py, etc.).
+# `uv sync --extra viz` o `uv run --extra viz scripts/plot_nested_kv.py ...`.
+viz = [
+    "matplotlib>=3.8",
+]
 
 [dependency-groups]
 dev = [
