@@ -156,7 +156,11 @@ def generate_config(
     rng.shuffle(pairs)  # "diferentes configuraciones de ordenación" (§3.2.2).
 
     queries: list[NestedKVQuery] = []
-    for level in LEVELS:
+    # Los niveles disponibles derivan de la longitud de la cadena: una cadena
+    # de N nodos admite niveles 0..N-1. Antes esto iteraba sobre la constante
+    # global LEVELS (0..4), lo que capaba el anidamiento aunque chain_length
+    # fuese mayor. El runner filtra después qué niveles ejecutar (--levels).
+    for level in range(chain_length):
         # nivel L ⇒ partimos de k_{(chain_length - 1) - L} y resolvemos L saltos.
         start_idx = (chain_length - 1) - level
         queries.append(

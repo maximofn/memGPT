@@ -28,8 +28,9 @@ from dotenv import load_dotenv
 
 from memgpt.agent import build_agent
 from memgpt.benchmarks.nested_kv import (
-    LEVELS,
+    CHAIN_LENGTH,
     NESTED_KV_ASSISTANT,
+    PAIRS_PER_CONFIG,
     QueryResult,
     default_store_factory,
     generate_dataset,
@@ -42,10 +43,13 @@ from memgpt.memory_store import MemoryStore
 
 def _parse_levels(spec: str) -> tuple[int, ...]:
     values = tuple(int(x.strip()) for x in spec.split(",") if x.strip())
-    invalid = [v for v in values if v not in LEVELS]
+    # Solo exigimos enteros no negativos: el tope real lo marca --chain-length
+    # (una cadena de N nodos admite niveles 0..N-1) y se valida en main() una
+    # vez conocida esa longitud.
+    invalid = [v for v in values if v < 0]
     if invalid:
         raise argparse.ArgumentTypeError(
-            f"levels must be a subset of {list(LEVELS)}; got invalid {invalid}"
+            f"levels must be non-negative integers; got invalid {invalid}"
         )
     return values
 
@@ -74,10 +78,36 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="MemGPT Nested KV benchmark runner")
     parser.add_argument("--configs", type=int, default=30)
     parser.add_argument(
+        "--chain-length",
+        type=int,
+        default=CHAIN_LENGTH,
+        help=(
+            "Longitud de la cadena guía (nº de nodos). Una cadena de N nodos "
+            f"admite niveles de anidamiento 0..N-1. Default: {CHAIN_LENGTH} "
+            "(niveles 0..4, fiel a la Figura 7 del paper). Súbelo para probar "
+            "anidamientos más profundos."
+        ),
+    )
+    parser.add_argument(
         "--levels",
         type=_parse_levels,
-        default=LEVELS,
-        help="Comma-separated nesting levels (default: 0,1,2,3,4)",
+        default=None,
+        help=(
+            "Comma-separated nesting levels a ejecutar. Default: todos los que "
+            "permite --chain-length (0..chain_length-1)."
+        ),
+    )
+    parser.add_argument(
+        "--pairs-per-config",
+        type=int,
+        default=PAIRS_PER_CONFIG,
+        help=(
+            "Nº total de pares KV por config (cadena + distractores). Default: "
+            f"{PAIRS_PER_CONFIG} (paper). En baseline todos van inline en el "
+            "system prompt, así que subirlo agranda el pajar y degrada a "
+            "modelos que de otro modo resuelven la cadena inline. Debe ser "
+            ">= --chain-length."
+        ),
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
@@ -120,9 +150,38 @@ def main() -> int:
     if args.baseline and args.graphiti:
         parser.error("--baseline and --graphiti are mutually exclusive")
 
+    if args.chain_length < 2:
+        parser.error("--chain-length must be >= 2")
+
+    if args.pairs_per_config < args.chain_length:
+        parser.error(
+            f"--pairs-per-config ({args.pairs_per_config}) must be >= "
+            f"--chain-length ({args.chain_length})"
+        )
+
+    # Niveles a ejecutar: si no se pidieron explícitamente, todos los que
+    # permite la cadena (0..chain_length-1). Si se pidieron, validamos que no
+    # excedan la profundidad disponible.
+    if args.levels is None:
+        levels = tuple(range(args.chain_length))
+    else:
+        too_deep = [lv for lv in args.levels if lv >= args.chain_length]
+        if too_deep:
+            parser.error(
+                f"--levels {too_deep} exceed the chain depth; with "
+                f"--chain-length {args.chain_length} valid levels are "
+                f"0..{args.chain_length - 1}"
+            )
+        levels = args.levels
+
     load_dotenv()
 
-    configs = generate_dataset(seed=args.seed, n_configs=args.configs)
+    configs = generate_dataset(
+        seed=args.seed,
+        n_configs=args.configs,
+        n_pairs=args.pairs_per_config,
+        chain_length=args.chain_length,
+    )
 
     # Buffer compartido para poder volcar resultados parciales si el run aborta.
     collected: list[QueryResult] = []
@@ -147,7 +206,7 @@ def main() -> int:
         if args.baseline:
             summary = run_baseline_benchmark(
                 configs,
-                levels=tuple(args.levels),
+                levels=levels,
                 agent_builder=make_baseline_agent_builder(args.model),
                 on_result=progress,
                 sleep_between_seconds=args.sleep_between,
@@ -167,7 +226,7 @@ def main() -> int:
 
             summary = run_benchmark(
                 configs,
-                levels=tuple(args.levels),
+                levels=levels,
                 agent_factory=agent_factory,
                 store_factory=store_factory,
                 on_result=progress,
@@ -225,13 +284,15 @@ def _build_summary_dict(summary, *, mode_baseline: bool) -> dict:
 
 def _summarize_partial(results: list[QueryResult]):
     """Replica BenchmarkSummary a partir de una lista cruda de resultados."""
-    from memgpt.benchmarks.nested_kv import BenchmarkSummary, LEVELS
+    from memgpt.benchmarks.nested_kv import BenchmarkSummary
 
     total = len(results)
     correct = sum(1 for r in results if r.correct)
     accuracy = correct / total if total else 0.0
     by_level: dict[int, float] = {}
-    for level in LEVELS:
+    # Derivamos los niveles de los propios resultados (no de la constante
+    # LEVELS) para soportar --chain-length > 5.
+    for level in sorted({r.nesting_level for r in results}):
         bucket = [r for r in results if r.nesting_level == level]
         if bucket:
             by_level[level] = sum(1 for r in bucket if r.correct) / len(bucket)
