@@ -33,6 +33,16 @@ from langgraph.graph.state import CompiledStateGraph
 
 from ..agent import build_agent
 from ..memory_store import InMemoryStore, MemoryStore
+from ..queue_manager import QueueManagerConfig
+
+# El baseline mete TODOS los pares inline en el system prompt (el "pajar"). Con
+# muchos pares (p. ej. --pairs-per-config 10000 ≈ 450k tokens) eso supera la
+# ventana default de 200k del Queue Manager, que dispararía un flush espurio en
+# cada query: el summarizer (LLM aparte) se invoca sin sentido —los datos viven
+# en el system prompt, que el flush ni siquiera expulsa— y un error transitorio
+# suyo aborta toda la corrida. El baseline es un control sin memoria: no debe
+# flushar nunca. Le damos una ventana efectivamente infinita.
+_BASELINE_CONTEXT_WINDOW = 100_000_000
 
 CHAIN_LENGTH = 5  # niveles 0..4 ⇒ 5 nodos en la cadena.
 PAIRS_PER_CONFIG = 140
@@ -445,6 +455,9 @@ def default_baseline_agent_builder(pairs: tuple[KVPair, ...]) -> CompiledStateGr
     return build_agent(
         system_prompt=build_baseline_system_prompt(pairs),
         memory_store=None,  # sin recall ni archival.
+        queue_config=QueueManagerConfig(
+            context_window_tokens=_BASELINE_CONTEXT_WINDOW
+        ),
     )
 
 
@@ -456,6 +469,9 @@ def make_baseline_agent_builder(model_id: str | None) -> BaselineAgentBuilder:
             system_prompt=build_baseline_system_prompt(pairs),
             memory_store=None,
             model_id=model_id,
+            queue_config=QueueManagerConfig(
+                context_window_tokens=_BASELINE_CONTEXT_WINDOW
+            ),
         )
 
     return _builder
