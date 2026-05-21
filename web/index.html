@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MemGPT · LLMs como sistemas operativos</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="deck" id="deck">
+
+    <!-- 1 · Portada -->
+    <section class="slide cover" data-label="Portada">
+      <div class="deco">
+        <div class="band"></div>
+        <div class="band2"></div>
+        <div class="circ c1"></div>
+        <div class="circ c2"></div>
+        <div class="circ c3"></div>
+      </div>
+      <div class="cover-inner">
+        <p class="cover-kicker">CHARLA TÉCNICA · 2026</p>
+        <h1 class="cover-title">MemGPT</h1>
+        <p class="cover-tagline">LLMs como sistemas operativos</p>
+        <p class="cover-sub">Memoria jerárquica auto-gestionada por el agente</p>
+        <div class="cover-meta">
+          <p class="ref">Implementación sobre LangGraph · Pavel Kim 2023 · arXiv:2310.08560</p>
+          <p class="author">Máximo Fernández · maximofn.com</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · El problema -->
+    <section class="slide" data-label="El problema">
+      <header class="hd">
+        <span class="hd-kicker">El problema</span>
+        <h2 class="hd-title">La ventana de contexto se llena</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="card">
+            <h3 class="block-title t-accent2">Síntoma</h3>
+            <p>Un LLM tiene contexto finito.</p>
+            <p>Conversaciones largas, documentos grandes o tareas de varios días desbordan inevitablemente.</p>
+            <p>Cuando se trunca, el agente olvida decisiones, identidad y hechos clave.</p>
+          </div>
+          <div class="card s2">
+            <h3 class="block-title t-accent">La idea de Karpathy (2023)</h3>
+            <p class="serif">“El LLM es la CPU; la ventana de contexto es la RAM.”</p>
+            <p>Y si es una CPU… necesita un sistema operativo: memoria virtual, planificador, llamadas al sistema.</p>
+            <p class="serif"><strong>MemGPT lo construye.</strong></p>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>2 / 24</span></div>
+    </section>
+
+    <!-- 3 · Analogía -->
+    <section class="slide" data-label="Analogía">
+      <header class="hd">
+        <span class="hd-kicker">Analogía</span>
+        <h2 class="hd-title">Memoria virtual para LLMs</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="card">
+            <h3 class="block-title t-accent">Sistema operativo</h3>
+            <div class="kv"><span class="k">CPU</span><span class="v">Ejecuta instrucciones</span></div>
+            <div class="kv"><span class="k">RAM</span><span class="v">Pequeña, rápida</span></div>
+            <div class="kv"><span class="k">Disco</span><span class="v">Grande, lento</span></div>
+            <div class="kv"><span class="k">Paginación</span><span class="v">Mueve datos RAM ↔ disco</span></div>
+            <div class="kv"><span class="k">Syscalls</span><span class="v">Procesos piden al SO</span></div>
+          </div>
+          <div class="card">
+            <h3 class="block-title t-accent2">MemGPT</h3>
+            <div class="kv"><span class="k">LLM</span><span class="v">Ejecuta turnos</span></div>
+            <div class="kv"><span class="k">Ventana de contexto</span><span class="v">Lo que ve en cada inferencia</span></div>
+            <div class="kv"><span class="k">Almacén externo</span><span class="v">Recall / Archival / MemFS</span></div>
+            <div class="kv"><span class="k">Queue Manager</span><span class="v">Expulsa y resume mensajes</span></div>
+            <div class="kv"><span class="k">Function calls</span><span class="v">El LLM pide leer/escribir memoria</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>3 / 24</span></div>
+    </section>
+
+    <!-- 4 · Tres piezas -->
+    <section class="slide" data-label="Qué es MemGPT">
+      <header class="hd">
+        <span class="hd-kicker">Qué es MemGPT</span>
+        <h2 class="hd-title">Tres piezas, un agente que se administra solo</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-3" style="flex:1; align-items:stretch;">
+          <div class="lcard accent">
+            <div class="serif t-accent" style="font-size:42px; font-weight:700;">01</div>
+            <h3 class="block-title">Jerarquía de memoria</h3>
+            <p class="muted">Rápida y pequeña (en contexto) + lenta e ilimitada (fuera).</p>
+          </div>
+          <div class="lcard accent2">
+            <div class="serif t-accent2" style="font-size:42px; font-weight:700;">02</div>
+            <h3 class="block-title">Gestor de control de flujo</h3>
+            <p class="muted">Decide cuándo invocar al LLM y cuándo expulsar y resumir mensajes.</p>
+          </div>
+          <div class="lcard warn">
+            <div class="serif t-warn" style="font-size:42px; font-weight:700;">03</div>
+            <h3 class="block-title">Funciones expuestas al LLM</h3>
+            <p class="muted">El propio modelo lee, escribe y busca en su memoria.</p>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px;">Punto clave: el LLM es auto-dirigido — decide qué guardar y qué buscar.</div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>4 / 24</span></div>
+    </section>
+
+    <!-- 5 · Anatomía -->
+    <section class="slide" data-label="Anatomía">
+      <header class="hd">
+        <span class="hd-kicker">Anatomía</span>
+        <h2 class="hd-title">Cómo modifica MemGPT la ventana de contexto</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid" style="grid-template-columns: 1.3fr 1fr; flex:1; align-items:stretch;">
+          <div class="card s2">
+            <div class="lcard accent" style="margin-bottom:12px;">
+              <strong class="t-accent serif">System Instructions</strong>
+              <p style="margin:6px 0 0;">Prompt + memGPT + funciones · solo lectura</p>
+            </div>
+            <div class="lcard accent2" style="margin-bottom:12px;">
+              <strong class="t-accent2 serif">Working Context</strong>
+              <p style="margin:6px 0 0;">Bloques etiquetados editables (assistant / human / custom)</p>
+            </div>
+            <div class="lcard warn">
+              <strong class="t-warn serif">FIFO Queue</strong>
+              <p style="margin:6px 0 0;">Slot 0: resumen recursivo · mensajes en orden cronológico</p>
+            </div>
+            <p class="muted center" style="text-align:center; margin:14px 0 0; font-size:13px;">Ventana de contexto del LLM</p>
+          </div>
+          <div class="card">
+            <p class="muted serif" style="font-size:16px; margin:0 0 6px;">Agente normal</p>
+            <pre class="code muted" style="font-size:13px;">Window:
+  [system prompt]
+  [user/agent turns…]</pre>
+            <p class="t-accent serif" style="font-size:16px; margin:16px 0 6px;">MemGPT</p>
+            <pre class="code" style="font-size:13px;">Window:
+  [system + memGPT prompt]
+  [working context]
+  [recursive summary]
+  [user/agent + tool calls]</pre>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>5 / 24</span></div>
+    </section>
+
+    <!-- 6 · Working Context -->
+    <section class="slide" data-label="Working Context">
+      <header class="hd">
+        <span class="hd-kicker">Working Context</span>
+        <h2 class="hd-title">La libreta del agente, siempre visible</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:start;">
+          <div>
+            <p class="lead">Bloque pequeño en el prompt, editable solo por el LLM vía tools.</p>
+            <div class="kv"><span class="k">Tamaño fijo</span><span class="v">Presupuesto de tokens; no crece.</span></div>
+            <div class="kv"><span class="k">Read / Write</span><span class="v">El LLM lo modifica; el harness, jamás.</span></div>
+            <div class="kv"><span class="k">Solo vía funciones</span><span class="v">core_memory_append · replace</span></div>
+            <div class="kv"><span class="k">Texto libre</span><span class="v">Lenguaje natural, no JSON.</span></div>
+            <div class="kv"><span class="k">Persistente</span><span class="v">Sobrevive entre sesiones.</span></div>
+          </div>
+          <div>
+            <h3 class="block-title t-accent">Bloques típicos</h3>
+            <div class="card" style="margin-bottom:10px; padding:14px 18px;">
+              <span class="chip accent">assistant</span>
+              <p style="margin:8px 0 4px;">Identidad del agente: nombre, personalidad, rol.</p>
+              <p class="mono muted" style="font-size:13px; margin:0;">“Soy Sam, paciente y curiosa. No revelo que soy IA.”</p>
+            </div>
+            <div class="card" style="margin-bottom:10px; padding:14px 18px;">
+              <span class="chip accent2">human</span>
+              <p style="margin:8px 0 4px;">Lo que el agente recuerda del usuario.</p>
+              <p class="mono muted" style="font-size:13px; margin:0;">“Ana, vive en Madrid, le gusta el surf.”</p>
+            </div>
+            <div class="card" style="padding:14px 18px;">
+              <span class="chip warn">custom</span>
+              <p style="margin:8px 0 4px;">Bloques que el desarrollador añade.</p>
+              <p class="mono muted" style="font-size:13px; margin:0;">task_context, project_constraints, team_members…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>6 / 24</span></div>
+    </section>
+
+    <!-- 7 · Tools de Core Memory -->
+    <section class="slide" data-label="Tools de Core Memory">
+      <header class="hd">
+        <span class="hd-kicker">Tools de Core Memory</span>
+        <h2 class="hd-title">Cómo edita el LLM su libreta</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="card">
+            <h3 class="block-title t-accent2 mono" style="font-family:var(--mono); font-size:18px;">core_memory_append</h3>
+            <p>Añade información al final del bloque.</p>
+            <pre class="code">core_memory_append(
+  label="human",
+  content="Cumpleaños: 7 de febrero"
+)</pre>
+          </div>
+          <div class="card">
+            <h3 class="block-title t-warn mono" style="font-family:var(--mono); font-size:18px;">core_memory_replace</h3>
+            <p>Sustituye un fragmento (corrige, actualiza).</p>
+            <pre class="code">core_memory_replace(
+  label="human",
+  old="novio James",
+  new="ex-novio James"
+)</pre>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px;">El LLM nunca escribe el bloque generando texto: solo a través de estas funciones.</div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>7 / 24</span></div>
+    </section>
+
+    <!-- 8 · FIFO Queue -->
+    <section class="slide" data-label="FIFO Queue">
+      <header class="hd">
+        <span class="hd-kicker">FIFO Queue</span>
+        <h2 class="hd-title">El flujo en vivo de la conversación</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid" style="grid-template-columns: 1.4fr 1fr; flex:1; align-items:start;">
+          <div class="card s2" style="padding:14px;">
+            <table class="cmp" style="font-size:13px;">
+              <tbody>
+                <tr><td class="dim">0</td><td class="mono t-hot">resumen</td><td>“Lo que pasó antes”, regenerado al hacer flush.</td></tr>
+                <tr><td class="dim">1</td><td class="mono">(user)</td><td>Hola, ¿te acuerdas dónde comimos?</td></tr>
+                <tr><td class="dim">2</td><td class="mono t-accent">(assistant)</td><td>tool_call: recall_memory_search(...)</td></tr>
+                <tr><td class="dim">3</td><td class="mono t-accent2">(tool_result)</td><td>[03/12] “Taco Bell junto a la playa”</td></tr>
+                <tr><td class="dim">4</td><td class="mono">(assistant)</td><td>Sí, en el Taco Bell de Pacifica.</td></tr>
+                <tr><td class="dim">5</td><td class="mono t-warn">(system)</td><td>Memory Pressure: contexto al 75%</td></tr>
+                <tr><td class="dim">…</td><td class="mono dim">(expulsados)</td><td>Se mueven a Recall Storage</td></tr>
+              </tbody>
+            </table>
+            <div class="bar-labels" style="margin-top:8px;"><span class="muted">↑ más antiguos (se expulsan)</span><span class="muted">más recientes ↓</span></div>
+          </div>
+          <div class="card">
+            <h3 class="block-title t-accent">Entra en la FIFO</h3>
+            <ul class="dots">
+              <li>Mensajes de usuario y agente</li>
+              <li>Tool calls de MemGPT y otras tools</li>
+              <li>Resultados de las funciones</li>
+              <li>Mensajes del sistema (alertas, eventos)</li>
+              <li>Sellos temporales para anclar al agente</li>
+            </ul>
+            <p class="muted" style="font-size:13px; margin-top:14px;">Lo escribe el Queue Manager, no el LLM: es un log automático.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>8 / 24</span></div>
+    </section>
+
+    <!-- 9 · Umbrales -->
+    <section class="slide" data-label="Umbrales">
+      <header class="hd">
+        <span class="hd-kicker">Umbrales</span>
+        <h2 class="hd-title">70 % avisa, 100 % expulsa</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="bar-wrap">
+          <div class="bar"><div class="green"></div><div class="amber"></div></div>
+          <div class="bar-labels">
+            <span></span>
+            <span class="t-warn" style="font-weight:700;">70 % · Warning</span>
+            <span class="t-hot" style="font-weight:700;">100 % · Flush</span>
+          </div>
+        </div>
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="card">
+            <h3 class="block-title t-warn">Warning (70 %)</h3>
+            <p>Se inyecta una alerta en la FIFO. El LLM consolida lo importante en Working Context, Archival o MemFS.</p>
+          </div>
+          <div class="card">
+            <h3 class="block-title t-hot">Flush (100 %)</h3>
+            <p>El Queue Manager expulsa los mensajes más viejos (~50 %) y regenera el resumen. Nada se pierde: vive en Recall Storage.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>9 / 24</span></div>
+    </section>
+
+    <!-- 10 · Resumen recursivo -->
+    <section class="slide" data-label="Resumen recursivo">
+      <header class="hd">
+        <span class="hd-kicker">Resumen recursivo</span>
+        <h2 class="hd-title">Una llamada al LLM fuera del bucle principal</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid" style="grid-template-columns: 1fr auto 1fr; align-items:center; gap:24px; flex:1;">
+          <div>
+            <div class="lcard accent2" style="margin-bottom:10px;">Working Context actual</div>
+            <div class="lcard warn" style="margin-bottom:10px;">Resumen previo (slot 0)</div>
+            <div class="lcard hot">Mensajes a expulsar</div>
+          </div>
+          <div class="tcard" style="background:var(--accent); border-radius:14px; text-align:center; padding:20px 16px;">
+            <div class="serif" style="color:var(--bg); font-weight:700; font-size:18px;">Summarizer LLM</div>
+            <p style="color:var(--bg); margin:8px 0 0; font-size:13px;">Llamada independiente, prompt mínimo</p>
+          </div>
+          <div>
+            <div class="lcard accent" style="margin-bottom:10px;">Nuevo resumen recursivo</div>
+            <div class="lcard accent2">Promociones a Working Context</div>
+          </div>
+        </div>
+        <div class="card s2" style="margin-top:14px; padding:14px 20px;">
+          <p style="margin:0; font-size:13px;"><strong>¿Por qué fuera del bucle?</strong> Si el contexto está al 100 %, no cabe ‘hazme un resumen’ encima. El summarizer recibe su propio prompt, sin las System Instructions del agente principal.</p>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>10 / 24</span></div>
+    </section>
+
+    <!-- 11 · Recall -->
+    <section class="slide" data-label="Recall Storage">
+      <header class="hd">
+        <span class="hd-kicker">Recall Storage</span>
+        <h2 class="hd-title">El log completo de la conversación</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="card">
+            <h3 class="block-title t-accent">¿Qué es?</h3>
+            <p>Historial completo, fuera del contexto.</p>
+            <p>Cada mensaje que entra a la FIFO se copia automáticamente a Recall en el mismo turno.</p>
+            <p>Cuando se hace flush, nada se pierde: los mensajes expulsados ya están en Recall.</p>
+          </div>
+          <div class="card s2">
+            <h3 class="block-title t-accent2">Cómo lo usa el LLM</h3>
+            <pre class="code" style="margin-bottom:14px;">recall_memory_search(query="...", page=N)</pre>
+            <div class="kv"><span class="k">Solo lectura</span><span class="v">el LLM busca, no inserta</span></div>
+            <div class="kv"><span class="k">Semántica</span><span class="v">embeddings + similitud</span></div>
+            <div class="kv"><span class="k">Paginada</span><span class="v">evita ‘lost in the middle’</span></div>
+            <div class="kv"><span class="k">Ilimitada</span><span class="v">toda la historia</span></div>
+            <div class="kv"><span class="k">Persistente</span><span class="v">entre sesiones</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>11 / 24</span></div>
+    </section>
+
+    <!-- 12 · Archival -->
+    <section class="slide" data-label="Archival Storage">
+      <header class="hd">
+        <span class="hd-kicker">Archival Storage</span>
+        <h2 class="hd-title">Lo que el agente decide guardar a largo plazo</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-3" style="flex:1; align-items:stretch;">
+          <div class="tcard">
+            <div class="tcard-head accent">¿Qué entra?</div>
+            <div class="tcard-body">
+              <p style="margin:0 0 8px;">Texto arbitrario que el LLM elige persistir:</p>
+              <ul class="dots" style="font-size:14px;">
+                <li>resúmenes propios</li>
+                <li>hechos sueltos</li>
+                <li>documentos del usuario</li>
+                <li>conclusiones de la sesión</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head accent2">Escritura explícita</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:14px;">archival_memory_insert(
+  content="…"
+)</pre>
+              <p class="muted" style="margin-top:12px;">Solo entra lo que el LLM decide insertar. Recall, no.</p>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head warn">Lectura iterativa</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:14px;">archival_memory_search(
+  query="…", page=N
+)</pre>
+              <p class="muted" style="margin-top:12px;">Embeddings + paginación. El LLM repite, reformula, pagina.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>12 / 24</span></div>
+    </section>
+
+    <!-- 13 · Archival vs RAG -->
+    <section class="slide" data-label="Archival vs RAG">
+      <header class="hd">
+        <span class="hd-kicker">Archival vs RAG clásico</span>
+        <h2 class="hd-title">Mismo motor, distinto director</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <table class="cmp">
+          <thead>
+            <tr><th></th><th class="t-dim">RAG clásico</th><th class="t-accent">Archival Storage</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Quién decide buscar</td><td class="dim">El pipeline, siempre</td><td>El LLM, solo si lo necesita</td></tr>
+            <tr><td>Iteración</td><td class="dim">Un disparo</td><td>Paginar, reformular, reintentar</td></tr>
+            <tr><td>Escritura</td><td class="dim">Corpus estático</td><td>El LLM puede archival_memory_insert</td></tr>
+            <tr><td>Resultado top-K</td><td class="dim">Inyectado al prompt</td><td>El LLM lee y decide qué hacer</td></tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top:18px;">Archival = RAG (motor) + control del LLM (cuándo, cómo, cuántas veces) + escritura por el agente.</div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>13 / 24</span></div>
+    </section>
+
+    <!-- 14 · MemFS -->
+    <section class="slide" data-label="MemFS">
+      <header class="hd">
+        <span class="hd-kicker">MemFS</span>
+        <h2 class="hd-title">Memoria como filesystem versionado</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:start;">
+          <div class="card">
+            <div class="tree">
+              <div class="dir">/</div>
+              <div class="dir">├── users/</div>
+              <div class="dir">│&nbsp;&nbsp; └── maximo/</div>
+              <div class="file">│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └── objetivos-q2.md</div>
+              <div class="dir">├── projects/</div>
+              <div class="dir">│&nbsp;&nbsp; └── portafolio/</div>
+              <div class="file">│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├── decisiones.md</div>
+              <div class="file">│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └── notas.md</div>
+              <div class="dir">└── learning/</div>
+              <div class="dir">&nbsp;&nbsp;&nbsp;&nbsp; └── spanish/</div>
+            </div>
+          </div>
+          <div>
+            <div class="card s2" style="margin-bottom:12px;">
+              <h3 class="block-title t-accent">Tools de MemFS</h3>
+              <pre class="code" style="font-size:13px;">memfs.create(path, content)
+memfs.read(path)     memfs.write(path, ...)
+memfs.list(path)     memfs.move(src, dst)
+memfs.grep(path, q)  memfs.history(path)
+memfs.rollback(path, version)</pre>
+            </div>
+            <div class="card">
+              <h3 class="block-title t-accent2">Por qué versionado</h3>
+              <ul class="dots green" style="font-size:14px;">
+                <li>Proyectos largos en árbol jerárquico</li>
+                <li>Trazabilidad: cómo evolucionó un fichero</li>
+                <li>Rollback si el agente sobrescribe por error</li>
+                <li>Pizarra compartida entre multi-agentes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>14 / 24</span></div>
+    </section>
+
+    <!-- 15 · Comparativa -->
+    <section class="slide" data-label="Comparativa">
+      <header class="hd">
+        <span class="hd-kicker">Working / Archival / MemFS</span>
+        <h2 class="hd-title">Tres memorias que coexisten</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <table class="cmp">
+          <thead>
+            <tr><th></th><th class="t-accent">Working Context</th><th class="t-accent2">Archival Storage</th><th class="t-warn">MemFS</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Dónde vive</td><td class="dim">En la ventana de contexto</td><td class="dim">BD vectorial</td><td class="dim">Filesystem versionado</td></tr>
+            <tr><td>Tamaño</td><td class="dim">Pequeño (tokens)</td><td class="dim">Ilimitado</td><td class="dim">Ilimitado</td></tr>
+            <tr><td>Siempre visible</td><td class="dim">Sí</td><td class="dim">No (buscar)</td><td class="dim">No (navegar)</td></tr>
+            <tr><td>Búsqueda</td><td class="dim">Directa</td><td class="dim">Semántica</td><td class="dim">Path + grep</td></tr>
+            <tr><td>Versionado</td><td class="dim">No</td><td class="dim">No</td><td class="dim">Sí, tipo git</td></tr>
+            <tr><td>Coste por uso</td><td class="dim">Tokens en cada turno</td><td class="dim">Tool call</td><td class="dim">Tool call</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>15 / 24</span></div>
+    </section>
+
+    <!-- 16 · Decidir dónde guardar -->
+    <section class="slide" data-label="Decidir dónde guardar">
+      <header class="hd">
+        <span class="hd-kicker">Decidir dónde guardar</span>
+        <h2 class="hd-title">Regla del agente</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-3" style="flex:1; align-items:stretch;">
+          <div class="tcard">
+            <div class="tcard-head accent">Working Context</div>
+            <div class="tcard-body">
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Si el dato es…</p>
+              <p style="margin:0 0 12px;">Crítico, debe verse en cada turno. Identidad, preferencias clave, estado actual.</p>
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Ejemplo</p>
+              <pre class="code" style="font-size:12px;">“El usuario es Máximo,
+prefiere español, usa
+LangGraph + Astro.”</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head accent2">Archival Storage</div>
+            <div class="tcard-body">
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Si el dato es…</p>
+              <p style="margin:0 0 12px;">Voluminoso, no sabes cuándo lo necesitarás. Búsqueda por significado a posteriori.</p>
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Ejemplo</p>
+              <pre class="code" style="font-size:12px;">“El usuario eligió
+pgvector porque…” →
+recuperable meses después.</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head warn">MemFS</div>
+            <div class="tcard-body">
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Si el dato es…</p>
+              <p style="margin:0 0 12px;">Estructurado, evoluciona en el tiempo, necesitas historial.</p>
+              <p class="muted" style="font-weight:700; font-size:13px; margin:0 0 4px;">Ejemplo</p>
+              <pre class="code" style="font-size:12px;">/projects/portafolio/
+  decisiones.md
++ memfs.history(...)</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>16 / 24</span></div>
+    </section>
+
+    <!-- 17 · Ciclo -->
+    <section class="slide" data-label="Ciclo">
+      <header class="hd">
+        <span class="hd-kicker">Ciclo de funcionamiento</span>
+        <h2 class="hd-title">Qué pasa cuando llega un evento</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body" style="justify-content:center;">
+        <div class="flow">
+          <div class="step"><div class="topbar" style="background:var(--accent)"></div><div class="num t-accent">01</div><div class="st">Evento</div><div class="ss">Mensaje, alerta o tick</div></div>
+          <span class="arrow">→</span>
+          <div class="step"><div class="topbar" style="background:var(--accent-2)"></div><div class="num t-accent2">02</div><div class="st">Queue Manager</div><div class="ss">Añade a FIFO + Recall</div></div>
+          <span class="arrow">→</span>
+          <div class="step"><div class="topbar" style="background:var(--warn)"></div><div class="num t-warn">03</div><div class="st">Pressure check</div><div class="ss">¿70 % / 100 %?</div></div>
+          <span class="arrow">→</span>
+          <div class="step"><div class="topbar" style="background:var(--accent)"></div><div class="num t-accent">04</div><div class="st">Inferencia LLM</div><div class="ss">Prompt = system + Core + FIFO</div></div>
+          <span class="arrow">→</span>
+          <div class="step"><div class="topbar" style="background:var(--hot)"></div><div class="num t-hot">05</div><div class="st">¿Tool call?</div><div class="ss">Sí → ejecutar y repetir · No → respuesta</div></div>
+        </div>
+        <p class="muted center" style="text-align:center; margin-top:24px;">↻ si hubo tool call → siguiente paso (function chaining vía heartbeat)</p>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>17 / 24</span></div>
+    </section>
+
+    <!-- 18 · Eventos -->
+    <section class="slide" data-label="Eventos automáticos">
+      <header class="hd">
+        <span class="hd-kicker">Eventos automáticos</span>
+        <h2 class="hd-title">El agente puede arrancarse solo</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="tcard">
+            <div class="tcard-head accent">Wall-clock</div>
+            <div class="tcard-body">
+              <p>El reloj del mundo dispara una acción.</p>
+              <p class="muted" style="font-weight:700; font-size:13px; margin:14px 0 6px;">Ejemplos</p>
+              <pre class="code" style="font-size:13px;">“Da los buenos días a las 09:00”
+“Manda el correo en 30 minutos”
+“Comprueba el estado cada 10 min”</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head accent2">Sleep-time agents</div>
+            <div class="tcard-body">
+              <p>Cada N pasos del agente principal se activa un agente auxiliar.</p>
+              <p class="muted" style="font-weight:700; font-size:13px; margin:14px 0 6px;">Ejemplos</p>
+              <pre class="code" style="font-size:13px;">“Cada 10 turnos consolida memoria”
+“Cada 20 mensajes revisa coherencia”
+“Tras 50 turnos sin búsqueda,
+ sugiere recuperar de archival”</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>18 / 24</span></div>
+    </section>
+
+    <!-- 19 · Encadenar -->
+    <section class="slide" data-label="Encadenar acciones">
+      <header class="hd">
+        <span class="hd-kicker">Encadenar acciones</span>
+        <h2 class="hd-title">request_heartbeat (LLMs antiguos) vs nativo</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:start;">
+          <div class="card">
+            <h3 class="block-title t-warn">LEGACY · request_heartbeat=True</h3>
+            <p>Argumento booleano en cualquier tool call. Si está activo, MemGPT vuelve a invocar al LLM aunque éste hubiera ‘parado’.</p>
+            <p>Evita que el modelo se rinda a medio buscar.</p>
+            <pre class="code">search_files(
+  query="MyClass",
+  request_heartbeat=True
+)</pre>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:12px;">
+              <h3 class="block-title t-accent2">NATIVE · LLMs modernos</h3>
+              <p style="margin:0;">Si la respuesta contiene tool_calls, se ejecutan. Si no, es el mensaje final al usuario. No hace falta booleano: el LLM decide.</p>
+            </div>
+            <div class="card s2">
+              <h3 class="block-title t-hot">Protección contra bucles</h3>
+              <ul class="dots hot" style="font-size:14px;">
+                <li>Límite de heartbeats por turno</li>
+                <li>Timeout wall-clock</li>
+                <li>Detección de tool calls repetidas sin progreso</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>19 / 24</span></div>
+    </section>
+
+    <!-- 20 · Mi implementación -->
+    <section class="slide" data-label="Mi implementación">
+      <header class="hd">
+        <span class="hd-kicker alt">Mi implementación</span>
+        <h2 class="hd-title">MemGPT sobre LangGraph, desde cero</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="gflow" style="margin-bottom:8px;">
+          <span class="gnode">turn_init</span><span class="ga">→</span>
+          <span class="gnode">recall_sync_in</span><span class="ga">→</span>
+          <span class="gnode warn">pressure_check</span><span class="ga">→</span>
+          <span class="gnode accent2">agent (LLM)</span><span class="ga">→</span>
+          <span class="gnode">step_tick</span><span class="ga">→</span>
+          <span class="gnode">recall_sync_post</span>
+        </div>
+        <div class="gflow" style="margin-bottom:18px;">
+          <span class="gnode hot">tools + heartbeat_check</span>
+          <span class="muted" style="font-size:13px;">↺ function chaining de vuelta al agente</span>
+        </div>
+        <div class="card s2">
+          <h3 class="block-title t-accent">Stack</h3>
+          <div class="grid cols-4">
+            <div><span class="chip accent">LangGraph</span><p class="muted" style="font-size:13px; margin:8px 0 0;">StateGraph + MemGPTState (Pydantic)</p></div>
+            <div><span class="chip accent2">Postgres + pgvector</span><p class="muted" style="font-size:13px; margin:8px 0 0;">PostgresSaver + EventStore</p></div>
+            <div><span class="chip warn">Neo4j + Graphiti</span><p class="muted" style="font-size:13px; margin:8px 0 0;">Recall + Archival con embeddings</p></div>
+            <div><span class="chip hot">MemFS in-memory</span><p class="muted" style="font-size:13px; margin:8px 0 0;">9 tools versionadas (snapshot + SHA-1)</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>20 / 24</span></div>
+    </section>
+
+    <!-- 21 · Tools del agente -->
+    <section class="slide" data-label="Tools del agente">
+      <header class="hd">
+        <span class="hd-kicker">Tools del agente</span>
+        <h2 class="hd-title">Lo que el LLM puede llamar</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-4" style="flex:1; align-items:stretch;">
+          <div class="tcard">
+            <div class="tcard-head accent">Core Memory</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:11px;">core_memory_append(
+  label, content)
+core_memory_replace(
+  label, old, new)</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head accent2">Recall &amp; Archival</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:11px;">recall_memory_search(
+  query, page)
+archival_memory_insert(
+  content)
+archival_memory_search(
+  query, page)</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head warn">MemFS</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:11px;">memfs.create / read /
+  write
+memfs.list / move /
+  delete / grep
+memfs.history / rollback</pre>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-head hot">Comunicación</div>
+            <div class="tcard-body">
+              <pre class="code" style="font-size:11px;">send_message(text)</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>21 / 24</span></div>
+    </section>
+
+    <!-- 22 · Decisiones de diseño -->
+    <section class="slide" data-label="Decisiones de diseño">
+      <header class="hd">
+        <span class="hd-kicker">Decisiones de diseño</span>
+        <h2 class="hd-title">Lo que aprendí construyéndolo</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body">
+        <div class="grid cols-2" style="flex:1; align-items:stretch;">
+          <div class="lcard accent">
+            <h3 class="block-title t-accent" style="font-size:18px;">Bloques atómicos al expulsar</h3>
+            <p class="muted">Nunca separar un AIMessage con tool_calls de sus ToolMessages. Evita los bugs #111/#126 de langmem.</p>
+          </div>
+          <div class="lcard accent2">
+            <h3 class="block-title t-accent2" style="font-size:18px;">Recursive summary fuera de messages</h3>
+            <p class="muted">Vive en su propio campo del estado y se inyecta como SystemMessage. El reducer append-only no admite slots mutables.</p>
+          </div>
+          <div class="lcard warn">
+            <h3 class="block-title t-warn" style="font-size:18px;">parallel_tool_calls = False</h3>
+            <p class="muted">Dos tools a la vez chocan en core_memory (un solo campo del state). MemGPT está pensado para chaining, no fan-out.</p>
+          </div>
+          <div class="lcard hot">
+            <h3 class="block-title t-hot" style="font-size:18px;">Síncrono a propósito</h3>
+            <p class="muted">El grafo se invoca con .invoke(); mezclar nodos async rompe con TypeError en LangGraph.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>22 / 24</span></div>
+    </section>
+
+    <!-- 23 · Resumen -->
+    <section class="slide" data-label="Resumen">
+      <header class="hd">
+        <span class="hd-kicker">Resumen</span>
+        <h2 class="hd-title">Qué te llevas de MemGPT</h2>
+        <span class="hd-bar"></span>
+      </header>
+      <div class="body" style="justify-content:center; gap:12px;">
+        <div class="lcard accent"><div class="kv" style="margin:0;"><span class="k t-accent serif" style="min-width:230px;">LLM como CPU</span><span class="v">La ventana es RAM, lo externo es disco.</span></div></div>
+        <div class="lcard accent2"><div class="kv" style="margin:0;"><span class="k t-accent2 serif" style="min-width:230px;">Memoria jerárquica</span><span class="v">Working Context · FIFO · Recall · Archival · MemFS.</span></div></div>
+        <div class="lcard warn"><div class="kv" style="margin:0;"><span class="k t-warn serif" style="min-width:230px;">Auto-gestión</span><span class="v">El modelo decide qué guardar, qué buscar y cuántas veces.</span></div></div>
+        <div class="lcard hot"><div class="kv" style="margin:0;"><span class="k t-hot serif" style="min-width:230px;">Control de flujo</span><span class="v">Queue Manager + umbrales (70 % avisa, 100 % expulsa y resume).</span></div></div>
+        <div class="lcard accent"><div class="kv" style="margin:0;"><span class="k t-accent serif" style="min-width:230px;">Eventos automáticos</span><span class="v">Wall-clock + sleep-time agents para consolidar sin usuario.</span></div></div>
+      </div>
+      <div class="ft"><span>MemGPT · LLMs como sistemas operativos</span><span>23 / 24</span></div>
+    </section>
+
+    <!-- 24 · Gracias -->
+    <section class="slide closing" data-label="Gracias">
+      <div class="deco">
+        <div class="band"></div>
+        <div class="band2"></div>
+        <div class="circ c1"></div>
+        <div class="circ c2"></div>
+        <div class="circ c3"></div>
+      </div>
+      <div class="closing-inner">
+        <h1 class="closing-title">Gracias</h1>
+        <p class="closing-sub">Preguntas, comentarios, ideas.</p>
+        <div class="res-card">
+          <h4>Recursos</h4>
+          <div class="res-row"><span class="rdot" style="background:var(--accent)"></span><span class="rk">Paper</span><span class="rv">arXiv:2310.08560</span></div>
+          <div class="res-row"><span class="rdot" style="background:var(--accent-2)"></span><span class="rk">Letta (sucesor)</span><span class="rv">github.com/letta-ai/letta</span></div>
+          <div class="res-row"><span class="rdot" style="background:var(--warn)"></span><span class="rk">Mi implementación</span><span class="rv">github.com/maximofn/memGPT</span></div>
+          <div class="res-row"><span class="rdot" style="background:var(--hot)"></span><span class="rk">Blog</span><span class="rv">maximofn.com</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav" aria-label="Navegación de la presentación">
+    <button id="prev" class="nav-btn" aria-label="Anterior">←</button>
+    <span class="counter"><span id="cur">1</span> / <span id="tot">24</span></span>
+    <button id="next" class="nav-btn" aria-label="Siguiente">→</button>
+  </nav>
+
+  <p class="hint">Pulsa cualquier tecla para avanzar · ← / → para navegar</p>
+
+  <script src="script.js"></script>
+</body>
+</html>
