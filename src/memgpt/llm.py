@@ -34,6 +34,11 @@ def _endpoint_kwargs(role: str) -> dict[str, Any]:
         out["api_base"] = base
     if key:
         out["api_key"] = key
+    # litellm reenvía `extra_body` tal cual al cliente OpenAI: mismo uso que
+    # en agent.py (p. ej. desactivar el thinking de DeepSeek v4).
+    extra_body = settings.extra_body_dict(role)
+    if extra_body:
+        out["extra_body"] = extra_body
     return out
 
 

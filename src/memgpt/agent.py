@@ -110,6 +110,12 @@ def _build_llm(tools: Sequence[BaseTool], model_id: str | None = None) -> Any:
             init_kwargs["base_url"] = settings.primary_llm_base_url
         if settings.primary_llm_api_key:
             init_kwargs["api_key"] = settings.primary_llm_api_key
+        # extra_body pasa flags propietarios al endpoint (p. ej. desactivar
+        # el thinking de DeepSeek v4 — ver config.extra_body_dict). Solo para
+        # openai: para no enviar campos no soportados a Anthropic.
+        extra_body = settings.extra_body_dict("primary")
+        if extra_body:
+            init_kwargs["extra_body"] = extra_body
     llm: BaseChatModel = init_chat_model(resolved, **init_kwargs)
     # parallel_tool_calls=False: MemGPT está diseñado en torno a tool calls
     # secuenciales encadenadas por heartbeat. Si el LLM emite dos tools en
