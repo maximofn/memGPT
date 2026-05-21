@@ -97,6 +97,18 @@ def _resolve_model_id(model_id: str) -> str:
     return f"anthropic:{model_id}"
 
 
+def _is_deepseek(resolved_model: str, settings: Any) -> bool:
+    """¿El LLM primario es DeepSeek? (por nombre de modelo o por base_url).
+
+    Cubre tanto ``openai:deepseek-v4-flash`` como apuntar un base_url a
+    ``api.deepseek.com`` con otro nombre de modelo.
+    """
+    if "deepseek" in resolved_model.lower():
+        return True
+    base = settings.primary_llm_base_url or ""
+    return "deepseek" in base.lower()
+
+
 def _build_llm(tools: Sequence[BaseTool], model_id: str | None = None) -> Any:
     settings = get_settings()
     resolved = _resolve_model_id(model_id or settings.primary_llm_model)
@@ -110,13 +122,32 @@ def _build_llm(tools: Sequence[BaseTool], model_id: str | None = None) -> Any:
             init_kwargs["base_url"] = settings.primary_llm_base_url
         if settings.primary_llm_api_key:
             init_kwargs["api_key"] = settings.primary_llm_api_key
-        # extra_body pasa flags propietarios al endpoint (p. ej. desactivar
-        # el thinking de DeepSeek v4 — ver config.extra_body_dict). Solo para
-        # openai: para no enviar campos no soportados a Anthropic.
+        # extra_body pasa flags propietarios al endpoint (p. ej. activar/
+        # desactivar el thinking de DeepSeek v4 — ver config.extra_body_dict).
+        # Solo para openai: para no enviar campos no soportados a Anthropic.
         extra_body = settings.extra_body_dict("primary")
         if extra_body:
             init_kwargs["extra_body"] = extra_body
-    llm: BaseChatModel = init_chat_model(resolved, **init_kwargs)
+
+    # DeepSeek V4: si razona, la API exige reenviar `reasoning_content` en el
+    # tool-chaining; ningún cliente de stock lo hace (init_chat_model lo
+    # tiraría → 400 en el 2º paso del loop). Lo enrutamos por
+    # ThinkingChatDeepSeek, que lo reinyecta. Es seguro aunque el thinking esté
+    # desactivado (sin reasoning_content, la reinyección es no-op).
+    if _is_deepseek(resolved, settings):
+        from .deepseek import ThinkingChatDeepSeek
+
+        ds_kwargs: dict[str, Any] = {"model": resolved.split(":", 1)[-1]}
+        if settings.primary_llm_base_url:
+            ds_kwargs["api_base"] = settings.primary_llm_base_url
+        if settings.primary_llm_api_key:
+            ds_kwargs["api_key"] = settings.primary_llm_api_key
+        extra_body = settings.extra_body_dict("primary")
+        if extra_body:
+            ds_kwargs["extra_body"] = extra_body
+        llm: BaseChatModel = ThinkingChatDeepSeek(**ds_kwargs)
+    else:
+        llm = init_chat_model(resolved, **init_kwargs)
     # parallel_tool_calls=False: MemGPT está diseñado en torno a tool calls
     # secuenciales encadenadas por heartbeat. Si el LLM emite dos tools en
     # paralelo que actualicen Core Memory (p. ej. `core_memory_append` a
